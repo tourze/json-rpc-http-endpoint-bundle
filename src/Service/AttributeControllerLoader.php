@@ -1,0 +1,37 @@
+<?php
+
+namespace Tourze\JsonRPCHttpEndpointBundle\Service;
+
+use Symfony\Bundle\FrameworkBundle\Routing\AttributeRouteControllerLoader;
+use Symfony\Component\Config\Loader\Loader;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+use Symfony\Component\Routing\RouteCollection;
+use Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcController;
+use Tourze\RoutingAutoLoaderBundle\Service\RoutingAutoLoaderInterface;
+
+#[AutoconfigureTag('routing.loader')]
+class AttributeControllerLoader extends Loader implements RoutingAutoLoaderInterface
+{
+    private AttributeRouteControllerLoader $controllerLoader;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->controllerLoader = new AttributeRouteControllerLoader();
+    }
+
+    public function load(mixed $resource, ?string $type = null)
+    {
+        return $this->autoload();
+    }
+
+    public function supports(mixed $resource, ?string $type = null)
+    {
+        return $this->controllerLoader->supports($resource, $type);
+    }
+
+    public function autoload(): RouteCollection
+    {
+        return $this->controllerLoader->load(JsonRpcController::class);
+    }
+}
