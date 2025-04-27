@@ -20,14 +20,14 @@ class AttributeControllerLoader extends Loader implements RoutingAutoLoaderInter
         $this->controllerLoader = new AttributeRouteControllerLoader();
     }
 
-    public function load(mixed $resource, ?string $type = null)
+    public function load(mixed $resource, ?string $type = null): RouteCollection
     {
         return $this->autoload();
     }
 
-    public function supports(mixed $resource, ?string $type = null)
+    public function supports(mixed $resource, ?string $type = null): bool
     {
-        return $this->controllerLoader->supports($resource, $type);
+        return false;
     }
 
     public function autoload(): RouteCollection
