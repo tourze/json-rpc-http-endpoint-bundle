@@ -5,7 +5,6 @@
   "license": "MIT",
   "require": {
     "php": "^8.1",
-    "psr/log": "^3|^2|^1",
     "symfony/config": "^6.4",
     "symfony/dependency-injection": "^6.4",
     "symfony/framework-bundle": "^6.4",
@@ -15,7 +14,6 @@
     "symfony/yaml": "^6.4 || ^7.1",
     "tourze/backtrace-helper": "~0.0.5",
     "tourze/json-rpc-endpoint-bundle": "0.1.*",
-    "tourze/symfony-routing-auto-loader-bundle": "0.0.*",
     "willdurand/jsonp-callback-validator": "^2.0"
   },
   "require-dev": {
