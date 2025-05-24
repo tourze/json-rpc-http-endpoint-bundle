@@ -13,6 +13,7 @@
     "symfony/routing": "^6.4",
     "symfony/yaml": "^6.4 || ^7.1",
     "tourze/backtrace-helper": "~0.0.5",
+    "tourze/bundle-dependency": "0.0.*",
     "tourze/json-rpc-endpoint-bundle": "0.1.*",
     "tourze/symfony-routing-auto-loader-bundle": "0.0.*",
     "willdurand/jsonp-callback-validator": "^2.0"
