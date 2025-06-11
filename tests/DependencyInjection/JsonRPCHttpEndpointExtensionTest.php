@@ -42,7 +42,7 @@ class JsonRPCHttpEndpointExtensionTest extends TestCase
             
             $this->assertTrue($controllerDefinitionExists || $serviceDefinitionExists, 
                 'JsonRPCHttpEndpointExtension应该注册控制器或服务定义');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail('Exception thrown while testing extension load: ' . $e->getMessage());
         }
     }
