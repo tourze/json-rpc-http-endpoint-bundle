@@ -136,7 +136,7 @@ class JsonRPCHttpEndpointExtensionAdvancedTest extends TestCase
                 $this->extension->load($config, $container);
                 // 如果没有抛出异常，测试通过
                 $this->assertTrue(true);
-            } catch  (\Throwable $e) {
+            } catch (\Throwable $e) {
                 // 如果抛出异常，验证是否是预期的异常类型
                 $this->assertInstanceOf(\TypeError::class, $e, '应该抛出 TypeError');
             }
