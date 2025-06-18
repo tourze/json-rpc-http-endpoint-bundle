@@ -180,7 +180,7 @@ class JsonRpcControllerAdvancedTest extends TestCase
             $response = $this->controller->httpGet($request);
 
             // 检查实际的 JsonpCallbackValidator 行为
-            $isValidCallback = !empty($testCase['callback']) && \JsonpCallbackValidator::validate($testCase['callback']);
+            $isValidCallback = isset($testCase['callback']) && $testCase['callback'] !== '' && \JsonpCallbackValidator::validate($testCase['callback']);
             
             if ($isValidCallback) {
                 $this->assertEquals('application/javascript', $response->headers->get('Content-Type'));

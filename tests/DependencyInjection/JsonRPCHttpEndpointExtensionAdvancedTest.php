@@ -133,7 +133,7 @@ class JsonRPCHttpEndpointExtensionAdvancedTest extends TestCase
         foreach ($invalidConfigs as $config) {
             try {
                 $container = new ContainerBuilder();
-                $this->extension->load($config, $container);
+                $this->extension->load([$config], $container);
                 // 如果没有抛出异常，测试通过
                 $this->assertTrue(true);
             } catch (\Throwable $e) {

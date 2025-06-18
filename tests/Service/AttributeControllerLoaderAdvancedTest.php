@@ -119,7 +119,6 @@ class AttributeControllerLoaderAdvancedTest extends TestCase
             $controller = $route->getDefault('_controller');
             
             $this->assertNotNull($controller, "路由 {$routeName} 应该有控制器定义");
-            $this->assertIsString($controller, "路由 {$routeName} 的控制器应该是字符串");
             $this->assertStringContainsString('JsonRpcController', $controller, "控制器应该指向 JsonRpcController");
         }
     }
