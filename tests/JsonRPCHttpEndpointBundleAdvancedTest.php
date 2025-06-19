@@ -14,7 +14,6 @@ class JsonRPCHttpEndpointBundleAdvancedTest extends TestCase
     {
         $dependencies = JsonRPCHttpEndpointBundle::getBundleDependencies();
         
-        $this->assertIsArray($dependencies);
         $this->assertArrayHasKey(\Tourze\JsonRPCEndpointBundle\JsonRPCEndpointBundle::class, $dependencies);
         $this->assertEquals(['all' => true], $dependencies[\Tourze\JsonRPCEndpointBundle\JsonRPCEndpointBundle::class]);
     }

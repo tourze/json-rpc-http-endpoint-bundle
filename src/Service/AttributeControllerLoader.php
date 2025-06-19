@@ -32,6 +32,8 @@ class AttributeControllerLoader extends Loader implements RoutingAutoLoaderInter
 
     public function autoload(): RouteCollection
     {
-        return $this->controllerLoader->load(JsonRpcController::class);
+        $collection = new RouteCollection();
+        $collection->addCollection($this->controllerLoader->load(JsonRpcController::class));
+        return $collection;
     }
 }

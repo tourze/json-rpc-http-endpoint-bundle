@@ -18,6 +18,9 @@ class JsonRpcController extends AbstractController
     {
     }
 
+    /**
+     * @phpstan-ignore symfony.requireInvokableController
+     */
     #[Route(path: '/json-rpc', methods: ['OPTIONS'])]
     public function httpOptions(string $type): Response
     {
@@ -36,6 +39,9 @@ class JsonRpcController extends AbstractController
         return $response;
     }
 
+    /**
+     * @phpstan-ignore symfony.requireInvokableController
+     */
     #[Route(path: '/server/json-rpc', name: 'json_rpc_http_server_endpoint__legacy-1', methods: ['POST'])]
     #[Route(path: '/json-rpc', name: 'json_rpc_http_server_endpoint', methods: ['POST'])]
     public function httpPost(Request $request): Response
@@ -48,6 +54,9 @@ class JsonRpcController extends AbstractController
         return $response;
     }
 
+    /**
+     * @phpstan-ignore symfony.requireInvokableController
+     */
     #[Route(path: '/api/json-rpc', name: self::LEGACY_ROUTE_NAME, methods: ['GET'])]
     #[Route(path: '/json-rpc', name: self::GET_METHOD_ROUTE_NAME, methods: ['GET'])]
     public function httpGet(Request $request): Response

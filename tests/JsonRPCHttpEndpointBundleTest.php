@@ -12,14 +12,10 @@ class JsonRPCHttpEndpointBundleTest extends TestCase
     public function testBoot_addsBacktraceIgnoreFile(): void
     {
         // 保存原始的静态方法，以便在测试后恢复
+        $originalReflection = new \ReflectionClass(Backtrace::class);
         $originalMethod = null;
-        if (method_exists(Backtrace::class, 'addProdIgnoreFiles')) {
-            // 保存原始方法的实现
-            $originalReflection = new \ReflectionClass(Backtrace::class);
-            $originalMethod = null;
-            if ($originalReflection->hasMethod('addProdIgnoreFiles')) {
-                $originalMethod = $originalReflection->getMethod('addProdIgnoreFiles');
-            }
+        if ($originalReflection->hasMethod('addProdIgnoreFiles')) {
+            $originalMethod = $originalReflection->getMethod('addProdIgnoreFiles');
         }
 
         // 创建模拟的Backtrace类
