@@ -6,7 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Tourze\JsonRPCEndpointBundle\Service\JsonRpcEndpoint as SDKJsonRpcEndpoint;
+use Tourze\JsonRPC\Core\Contracts\EndpointInterface;
 
 class JsonRpcController extends AbstractController
 {
@@ -14,7 +14,7 @@ class JsonRpcController extends AbstractController
 
     public const GET_METHOD_ROUTE_NAME = 'json_rpc_http_server_endpoint_get';
 
-    public function __construct(private readonly SDKJsonRpcEndpoint $sdkEndpoint)
+    public function __construct(private readonly EndpointInterface $sdkEndpoint)
     {
     }
 
