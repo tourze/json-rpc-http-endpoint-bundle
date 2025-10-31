@@ -5,20 +5,26 @@ namespace Tourze\JsonRPCHttpEndpointBundle;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Tourze\BacktraceHelper\Backtrace;
 use Tourze\BundleDependency\BundleDependencyInterface;
+use Tourze\JsonRPCEndpointBundle\JsonRPCEndpointBundle;
 use Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcController;
+use Tourze\RoutingAutoLoaderBundle\RoutingAutoLoaderBundle;
 
 class JsonRPCHttpEndpointBundle extends Bundle implements BundleDependencyInterface
 {
     public function boot(): void
     {
         parent::boot();
-        Backtrace::addProdIgnoreFiles((new \ReflectionClass(JsonRpcController::class))->getFileName());
+        $filename = (new \ReflectionClass(JsonRpcController::class))->getFileName();
+        if (false !== $filename) {
+            Backtrace::addProdIgnoreFiles($filename);
+        }
     }
 
     public static function getBundleDependencies(): array
     {
         return [
-            \Tourze\JsonRPCEndpointBundle\JsonRPCEndpointBundle::class => ['all' => true],
+            JsonRPCEndpointBundle::class => ['all' => true],
+            RoutingAutoLoaderBundle::class => ['all' => true],
         ];
     }
 }

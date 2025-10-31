@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Tourze\JsonRPC\Core\Contracts\EndpointInterface;
 
-class JsonRpcController extends AbstractController
+final class JsonRpcController extends AbstractController
 {
     public const LEGACY_ROUTE_NAME = 'json_rpc_http_api_endpoint_legacy';
 
@@ -18,13 +18,32 @@ class JsonRpcController extends AbstractController
     {
     }
 
-    /**
-     * @phpstan-ignore symfony.requireInvokableController
-     */
-    #[Route(path: '/json-rpc', methods: ['OPTIONS'])]
-    public function httpOptions(string $type): Response
+    #[Route(path: '/json-rpc', name: 'json_rpc_http_server_endpoint', methods: ['GET', 'POST', 'OPTIONS'])]
+    #[Route(path: '/json-rpc', name: self::GET_METHOD_ROUTE_NAME, methods: ['GET'])]
+    #[Route(path: '/server/json-rpc', name: 'json_rpc_http_server_endpoint__legacy-1', methods: ['POST'])]
+    #[Route(path: '/api/json-rpc', name: self::LEGACY_ROUTE_NAME, methods: ['GET'])]
+    public function __invoke(Request $request): Response
+    {
+        return match ($request->getMethod()) {
+            'OPTIONS' => $this->handleOptions($request),
+            'POST' => $this->handlePost($request),
+            'GET' => $this->handleGet($request),
+            default => new Response('Method Not Allowed', 405),
+        };
+    }
+
+    private function handleOptions(Request $request): Response
     {
         $response = new Response();
+
+        // 从请求的 Content-Type 头获取类型，如果没有则默认为 json
+        $contentType = $request->headers->get('Content-Type', 'application/json');
+        if (1 === preg_match('/application\/(\w+)/', (string) $contentType, $matches)) {
+            $type = $matches[1];
+        } else {
+            $type = 'json';
+        }
+
         $response->headers->set('Content-Type', "application/{$type}");
 
         // Set allowed http methods
@@ -39,12 +58,7 @@ class JsonRpcController extends AbstractController
         return $response;
     }
 
-    /**
-     * @phpstan-ignore symfony.requireInvokableController
-     */
-    #[Route(path: '/server/json-rpc', name: 'json_rpc_http_server_endpoint__legacy-1', methods: ['POST'])]
-    #[Route(path: '/json-rpc', name: 'json_rpc_http_server_endpoint', methods: ['POST'])]
-    public function httpPost(Request $request): Response
+    private function handlePost(Request $request): Response
     {
         $response = new Response();
         $response->headers->set('Content-Type', 'application/json');
@@ -54,20 +68,16 @@ class JsonRpcController extends AbstractController
         return $response;
     }
 
-    /**
-     * @phpstan-ignore symfony.requireInvokableController
-     */
-    #[Route(path: '/api/json-rpc', name: self::LEGACY_ROUTE_NAME, methods: ['GET'])]
-    #[Route(path: '/json-rpc', name: self::GET_METHOD_ROUTE_NAME, methods: ['GET'])]
-    public function httpGet(Request $request): Response
+    private function handleGet(Request $request): Response
     {
         $response = new Response();
 
-        $content = $this->sdkEndpoint->index($request->query->get('__payload', ''), $request);
+        $payload = $request->query->get('__payload');
+        $content = $this->sdkEndpoint->index(null !== $payload ? (string) $payload : '', $request);
 
         // JSONP支持
         $callback = $request->query->get('callback', '');
-        if (!empty($callback) && \JsonpCallbackValidator::validate($callback)) {
+        if (is_string($callback) && '' !== $callback && \JsonpCallbackValidator::validate($callback)) {
             $response->headers->set('Content-Type', 'application/javascript');
             $content = "{$callback}({$content})";
         } else {

@@ -4,7 +4,14 @@ services:
     autowire: true      # Automatically injects dependencies in your services.
     autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-  Tourze\JsonRPCHttpEndpointBundle\Controller\:
-    resource: '../../Controller/'
-  Tourze\JsonRPCHttpEndpointBundle\Service\:
-    resource: '../../Service/'
+  Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcController:
+    autowire: true
+    autoconfigure: true
+
+  Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcExplorerController:
+    autowire: true
+    autoconfigure: true
+
+  Tourze\JsonRPCHttpEndpointBundle\Service\AttributeControllerLoader:
+    autowire: true
+    autoconfigure: true

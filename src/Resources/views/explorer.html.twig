@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JsonRPC API 探索器</title>
+    <link href="{{ asset('bundles/jsonrpchttpendpoint/css/explorer.css') }}" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+    <div class="header">
+        <h1>JsonRPC API 探索器</h1>
+        <div class="token-section">
+            <label for="bearer-token">Bearer Token:</label>
+            <input type="text" id="bearer-token" placeholder="输入认证令牌（可选）">
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="search-container">
+                <input type="text" id="method-search" class="search-input" placeholder="搜索接口...">
+            </div>
+            
+            <div class="methods-list">
+                {% set grouped_methods = {} %}
+                {% for method_name, method in methods %}
+                    {% set tag = method.tag %}
+                    {% if grouped_methods[tag] is not defined %}
+                        {% set grouped_methods = grouped_methods|merge({(tag): []}) %}
+                    {% endif %}
+                    {% set current_group = grouped_methods[tag] %}
+                    {% set current_group = current_group|merge([{name: method_name, data: method}]) %}
+                    {% set grouped_methods = grouped_methods|merge({(tag): current_group}) %}
+                {% endfor %}
+
+                {% for tag, tag_methods in grouped_methods %}
+                    <div class="method-group" data-group="{{ tag }}">
+                        <div class="group-header">{{ tag }} ({{ tag_methods|length }})</div>
+                        {% for method_item in tag_methods %}
+                            <div class="method-item" data-method="{{ method_item.name }}" data-group="{{ tag }}" data-search-text="{{ method_item.data.name|lower }} {{ method_item.data.summary|lower }}">
+                                <div class="method-header">
+                                    <div class="method-name">{{ method_item.data.name }}</div>
+                                    {% if method_item.data.requiresAuth %}
+                                        <span class="auth-badge">🔒 需要登录</span>
+                                    {% endif %}
+                                </div>
+                                {% if method_item.data.summary %}
+                                    <div class="method-summary">{{ method_item.data.summary }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="content">
+            {% if methods|length > 0 %}
+                {% for method_name, method in methods %}
+                    <div id="method-{{ method_name }}" class="method-detail">
+                        <div class="method-info">
+                            <h2>{{ method.name }}</h2>
+                            {% if method.summary %}
+                                <div class="method-description">{{ method.summary }}</div>
+                            {% endif %}
+                            {% if method.description %}
+                                <div class="method-description">{{ method.description }}</div>
+                            {% endif %}
+                            <div class="method-class">{{ method.class }}</div>
+                        </div>
+
+                        {% if method.parameters|length > 0 %}
+                            <div class="parameters-section">
+                                <h3>参数</h3>
+                                <div class="parameter-list">
+                                    {% for param_name, param in method.parameters %}
+                                        <div class="parameter-item">
+                                            <div class="param-header">
+                                                <span class="param-name">{{ param.name }}</span>
+                                                <span class="param-type">{{ param.type }}</span>
+                                                {% if param.optional %}
+                                                    <span class="param-optional">可选</span>
+                                                {% endif %}
+                                            </div>
+                                            {% if param.description %}
+                                                <div class="param-description">{{ param.description }}</div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        {% if method.returns %}
+                            <div class="returns-section">
+                                <h3>返回值</h3>
+                                <div class="parameter-list">
+                                    <div class="parameter-item">
+                                        <div class="param-header">
+                                            <span class="param-type">{{ method.returns.type }}</span>
+                                        </div>
+                                        {% if method.returns.description %}
+                                            <div class="param-description">{{ method.returns.description }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div class="test-section">
+                            <h3>测试接口</h3>
+                            <textarea 
+                                class="json-input" 
+                                placeholder="输入 JSON 参数（空对象 {} 或根据上述参数结构填写）"
+                            ></textarea>
+                            <div class="test-controls">
+                                <button class="btn btn-primary test-method-btn" data-method="{{ method_name }}">测试接口</button>
+                                <button class="btn btn-secondary format-json-btn" data-method="{{ method_name }}">格式化 JSON</button>
+                                <button class="btn btn-secondary clear-response-btn" data-method="{{ method_name }}">清除响应</button>
+                                <button class="btn btn-info copy-markdown-btn" data-method="{{ method_name }}" title="复制接口文档（Markdown格式）">📋 复制文档</button>
+                            </div>
+                            
+                            <div class="response-section">
+                                <h4>请求和响应详情</h4>
+                                <div class="http-details">
+                                    <div class="http-section">
+                                        <h5 class="http-section-title">HTTP 请求</h5>
+                                        <div class="http-content request-content"></div>
+                                    </div>
+                                    <div class="http-section">
+                                        <h5 class="http-section-title">HTTP 响应</h5>
+                                        <div class="http-content response-content"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Method data for JavaScript -->
+                        <script type="application/json">{{ method|json_encode|raw }}</script>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>没有找到可用的 JsonRPC 方法</h3>
+                    <p>请检查您的 JsonRPC 服务配置</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    </div>
+    <script src="{{ asset('bundles/jsonrpchttpendpoint/js/explorer.js') }}"></script>
+</body>
+</html>

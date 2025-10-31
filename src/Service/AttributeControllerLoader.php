@@ -7,6 +7,7 @@ use Symfony\Component\Config\Loader\Loader;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 use Symfony\Component\Routing\RouteCollection;
 use Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcController;
+use Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcExplorerController;
 use Tourze\RoutingAutoLoaderBundle\Service\RoutingAutoLoaderInterface;
 
 #[AutoconfigureTag(name: 'routing.loader')]
@@ -34,6 +35,8 @@ class AttributeControllerLoader extends Loader implements RoutingAutoLoaderInter
     {
         $collection = new RouteCollection();
         $collection->addCollection($this->controllerLoader->load(JsonRpcController::class));
+        $collection->addCollection($this->controllerLoader->load(JsonRpcExplorerController::class));
+
         return $collection;
     }
 }

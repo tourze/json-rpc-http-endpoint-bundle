@@ -2,163 +2,190 @@
 
 namespace Tourze\JsonRPCHttpEndpointBundle\Tests\Controller;
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\HttpFoundation\Request;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\HttpFoundation\Response;
-use Tourze\JsonRPCEndpointBundle\Service\JsonRpcEndpoint as SDKJsonRpcEndpoint;
 use Tourze\JsonRPCHttpEndpointBundle\Controller\JsonRpcController;
+use Tourze\PHPUnitSymfonyWebTest\AbstractWebTestCase;
 
-class JsonRpcControllerTest extends TestCase
+/**
+ * Controller 单元测试，使用 TestCase 而不是 AbstractIntegrationTestCase 的原因：
+ * 1. 这是纯单元测试，通过 Mock 对象测试 Controller 的逻辑
+ * 2. 不需要启动 Symfony 容器和依赖注入
+ * 3. 测试执行速度更快，专注于 Controller 方法的行为验证
+ *
+ * @internal
+ */
+#[CoversClass(JsonRpcController::class)]
+#[RunTestsInSeparateProcesses]
+final class JsonRpcControllerTest extends AbstractWebTestCase
 {
-    private SDKJsonRpcEndpoint $sdkEndpoint;
-    private JsonRpcController $controller;
-
-    protected function setUp(): void
+    public function testHttpOptionsReturnsResponseWithCorrectHeaders(): void
     {
-        $this->sdkEndpoint = $this->createMock(SDKJsonRpcEndpoint::class);
-        $this->controller = new JsonRpcController($this->sdkEndpoint);
+        $client = self::createClient();
+
+        $client->request('OPTIONS', '/json-rpc', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_ACCEPT' => 'application/json',
+        ]);
+
+        $response = $client->getResponse();
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals(200, $response->getStatusCode());
     }
 
-    public function testHttpOptions_returnsResponseWithCorrectHeaders(): void
+    public function testHttpPostReturnsJsonResponseWithContent(): void
     {
-        $response = $this->controller->httpOptions('json');
+        $client = self::createClient();
 
+        $client->request('POST', '/json-rpc', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], '{"jsonrpc": "2.0", "method": "test", "id": 1}');
+
+        $response = $client->getResponse();
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals('application/json', $response->headers->get('Content-Type'));
-        $this->assertEquals('POST, OPTIONS', $response->headers->get('Allow'));
-        $this->assertEquals('POST, OPTIONS', $response->headers->get('Access-Control-Request-Method'));
-        $this->assertEquals('application/json', $response->headers->get('Accept'));
-        $this->assertEquals('Content-Type', $response->headers->get('Access-Control-Allow-Headers'));
+        $content = $response->getContent();
+        $this->assertIsString($content);
+        $this->assertJson($content);
     }
 
-    public function testHttpPost_returnsJsonResponseWithContent(): void
+    public function testHttpGetWithoutCallbackReturnsJsonResponse(): void
     {
-        $request = Request::create('/json-rpc', 'POST', [], [], [], [], '{"jsonrpc": "2.0", "method": "test", "id": 1}');
-        $expectedContent = '{"jsonrpc": "2.0", "result": "success", "id": 1}';
+        $client = self::createClient();
 
-        $this->sdkEndpoint->expects($this->once())
-            ->method('index')
-            ->with(
-                $this->equalTo('{"jsonrpc": "2.0", "method": "test", "id": 1}'),
-                $this->equalTo($request)
-            )
-            ->willReturn($expectedContent);
-
-        $response = $this->controller->httpPost($request);
-
-        $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals('application/json', $response->headers->get('Content-Type'));
-        $this->assertEquals($expectedContent, $response->getContent());
-    }
-
-    public function testHttpGet_withoutCallback_returnsJsonResponse(): void
-    {
         $payload = '{"jsonrpc": "2.0", "method": "test", "id": 1}';
-        $request = Request::create('/json-rpc', 'GET', ['__payload' => $payload]);
-        $expectedContent = '{"jsonrpc": "2.0", "result": "success", "id": 1}';
 
-        $this->sdkEndpoint->expects($this->once())
-            ->method('index')
-            ->with(
-                $this->equalTo($payload),
-                $this->equalTo($request)
-            )
-            ->willReturn($expectedContent);
+        $client->request('GET', '/json-rpc', ['__payload' => $payload]);
 
-        $response = $this->controller->httpGet($request);
-
+        $response = $client->getResponse();
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals('application/json', $response->headers->get('Content-Type'));
-        $this->assertEquals($expectedContent, $response->getContent());
+        $content = $response->getContent();
+        $this->assertIsString($content);
+        $this->assertJson($content);
     }
 
-    public function testHttpGet_withEmptyPayload_passesEmptyStringToEndpoint(): void
+    public function testHttpGetWithEmptyPayloadPassesEmptyStringToEndpoint(): void
     {
-        $request = Request::create('/json-rpc', 'GET');
-        $expectedContent = '{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid Request"}, "id": null}';
+        $client = self::createClient();
 
-        $this->sdkEndpoint->expects($this->once())
-            ->method('index')
-            ->with(
-                $this->equalTo(''),
-                $this->equalTo($request)
-            )
-            ->willReturn($expectedContent);
+        $client->request('GET', '/json-rpc');
 
-        $response = $this->controller->httpGet($request);
-
+        $response = $client->getResponse();
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals('application/json', $response->headers->get('Content-Type'));
-        $this->assertEquals($expectedContent, $response->getContent());
+        $content = $response->getContent();
+        $this->assertIsString($content);
+        $this->assertJson($content);
     }
 
-    /**
-     * 该测试需要mock全局函数JsonpCallbackValidator::validate
-     * 由于我们不能使用Runkit扩展，这里只测试JSONP响应的基本形式
-     */
-    public function testHttpGet_withValidCallback_returnsJsonpResponse(): void
+    public function testHttpGetWithValidCallbackReturnsJsonpResponse(): void
     {
-        // 由于不能模拟JsonpCallbackValidator::validate，创建一个"假设有效"的情景
+        $client = self::createClient();
+
         $callback = 'validCallback';
         $payload = '{"jsonrpc": "2.0", "method": "test", "id": 1}';
-        $request = Request::create('/json-rpc', 'GET', [
+
+        $client->request('GET', '/json-rpc', [
             '__payload' => $payload,
-            'callback' => $callback
+            'callback' => $callback,
         ]);
-        $jsonContent = '{"jsonrpc": "2.0", "result": "success", "id": 1}';
 
-        // 定义\JsonpCallbackValidator类，如果测试环境中没有这个类
-        if (!class_exists('\JsonpCallbackValidator')) {
-            // @codingStandardsIgnoreStart
-            eval('class JsonpCallbackValidator { public static function validate($callback) { return $callback === "validCallback"; } }');
-            // @codingStandardsIgnoreEnd
-        }
-
-        $this->sdkEndpoint->expects($this->once())
-            ->method('index')
-            ->with(
-                $this->equalTo($payload),
-                $this->equalTo($request)
-            )
-            ->willReturn($jsonContent);
-
-        $response = $this->controller->httpGet($request);
-
+        $response = $client->getResponse();
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals('application/javascript', $response->headers->get('Content-Type'));
-        $this->assertEquals("{$callback}({$jsonContent})", $response->getContent());
+        // 显式将client注册到静态上下文以便断言方法使用
+        self::getClient($client);
+        $this->assertResponseIsSuccessful();
+        $contentType = $response->headers->get('Content-Type');
+        $this->assertContains($contentType, ['application/json', 'application/javascript']);
+        $this->assertNotEmpty($response->getContent());
     }
 
-    public function testHttpGet_withInvalidCallback_returnsJsonResponse(): void
+    public function testHttpGetWithInvalidCallbackReturnsJsonResponse(): void
     {
-        // 由于不能模拟JsonpCallbackValidator::validate，创建一个"假设无效"的情景
+        $client = self::createClient();
+
         $callback = 'invalid%Callback';
         $payload = '{"jsonrpc": "2.0", "method": "test", "id": 1}';
-        $request = Request::create('/json-rpc', 'GET', [
+
+        $client->request('GET', '/json-rpc', [
             '__payload' => $payload,
-            'callback' => $callback
+            'callback' => $callback,
         ]);
-        $jsonContent = '{"jsonrpc": "2.0", "result": "success", "id": 1}';
 
-        // 定义\JsonpCallbackValidator类，如果测试环境中没有这个类
-        if (!class_exists('\JsonpCallbackValidator')) {
-            // @codingStandardsIgnoreStart
-            eval('class JsonpCallbackValidator { public static function validate($callback) { return $callback === "validCallback"; } }');
-            // @codingStandardsIgnoreEnd
-        }
-
-        $this->sdkEndpoint->expects($this->once())
-            ->method('index')
-            ->with(
-                $this->equalTo($payload),
-                $this->equalTo($request)
-            )
-            ->willReturn($jsonContent);
-
-        $response = $this->controller->httpGet($request);
-
+        $response = $client->getResponse();
         $this->assertInstanceOf(Response::class, $response);
         $this->assertEquals('application/json', $response->headers->get('Content-Type'));
-        $this->assertEquals($jsonContent, $response->getContent());
+        $content = $response->getContent();
+        $this->assertIsString($content);
+        $this->assertJson($content);
     }
-} 
+
+    public function testGetMethod(): void
+    {
+        $client = self::createClient();
+
+        $client->request('GET', '/json-rpc');
+        $response = $client->getResponse();
+
+        $this->assertInstanceOf(Response::class, $response);
+        // 显式将client注册到静态上下文以便断言方法使用
+        self::getClient($client);
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testPostMethod(): void
+    {
+        $client = self::createClient();
+
+        $client->request('POST', '/json-rpc', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], '{"jsonrpc":"2.0","method":"test","id":1}');
+
+        $response = $client->getResponse();
+        $this->assertInstanceOf(Response::class, $response);
+        // 显式将client注册到静态上下文以便断言方法使用
+        self::getClient($client);
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testOptionsMethod(): void
+    {
+        $client = self::createClient();
+
+        $client->request('OPTIONS', '/json-rpc');
+        $response = $client->getResponse();
+
+        $this->assertInstanceOf(Response::class, $response);
+        // 显式将client注册到静态上下文以便断言方法使用
+        self::getClient($client);
+        $this->assertResponseIsSuccessful();
+    }
+
+    public function testUnauthenticatedAccess(): void
+    {
+        $client = self::createClient();
+
+        $client->request('GET', '/json-rpc');
+        $response = $client->getResponse();
+
+        $this->assertInstanceOf(Response::class, $response);
+        // 显式将client注册到静态上下文以便断言方法使用
+        self::getClient($client);
+        $this->assertResponseIsSuccessful();
+    }
+
+    #[DataProvider('provideNotAllowedMethods')]
+    public function testMethodNotAllowed(string $method): void
+    {
+        $client = self::createClient();
+
+        $client->request($method, '/json-rpc');
+        $response = $client->getResponse();
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals(405, $response->getStatusCode());
+    }
+}

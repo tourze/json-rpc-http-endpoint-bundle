@@ -2,47 +2,51 @@
 
 namespace Tourze\JsonRPCHttpEndpointBundle\Tests\Service;
 
-use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use Symfony\Component\Routing\RouteCollection;
 use Tourze\JsonRPCHttpEndpointBundle\Service\AttributeControllerLoader;
+use Tourze\PHPUnitSymfonyKernelTest\AbstractIntegrationTestCase;
 
-class AttributeControllerLoaderTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(AttributeControllerLoader::class)]
+#[RunTestsInSeparateProcesses]
+final class AttributeControllerLoaderTest extends AbstractIntegrationTestCase
 {
-    private AttributeControllerLoader $loader;
-
-    protected function setUp(): void
+    protected function onSetUp(): void
     {
-        $this->loader = new AttributeControllerLoader();
     }
 
-    public function testSupports_returnsFalse(): void
+    private function getLoader(): AttributeControllerLoader
     {
-        $this->assertFalse($this->loader->supports('resource'));
-        $this->assertFalse($this->loader->supports('resource', 'type'));
-        $this->assertFalse($this->loader->supports(null));
+        return self::getService(AttributeControllerLoader::class);
     }
 
-    public function testLoad_callsAutoload(): void
+    public function testSupportsReturnsFalse(): void
     {
-        $loaderMock = $this->createPartialMock(AttributeControllerLoader::class, ['autoload']);
-        
-        $routeCollection = new RouteCollection();
-        $loaderMock->expects($this->once())
-            ->method('autoload')
-            ->willReturn($routeCollection);
-        
-        $result = $loaderMock->load('resource', 'type');
-        
-        $this->assertSame($routeCollection, $result);
+        $loader = $this->getLoader();
+        $this->assertFalse($loader->supports('resource'));
+        $this->assertFalse($loader->supports('resource', 'type'));
+        $this->assertFalse($loader->supports(null));
     }
 
-    public function testAutoload_returnsRouteCollection(): void
+    public function testLoadDelegatesToAutoload(): void
+    {
+        $loader = $this->getLoader();
+        $result = $loader->load('resource', 'type');
+        $this->assertInstanceOf(RouteCollection::class, $result);
+    }
+
+    public function testAutoloadReturnsRouteCollection(): void
     {
         // 由于AttributeRouteControllerLoader是框架类，难以直接模拟
         // 这里我们测试autoload方法至少返回一个RouteCollection对象
-        
-        $result = $this->loader->autoload();
-        
+
+        $loader = $this->getLoader();
+        $result = $loader->autoload();
+
         $this->assertInstanceOf(RouteCollection::class, $result);
     }
-} 
+}
