@@ -12,7 +12,7 @@
     "symfony/routing": "^7.3",
     "symfony/service-contracts": "^3.6",
     "symfony/yaml": "^7.3",
-    "tourze/backtrace-helper": "0.1.*",
+    "tourze/backtrace-helper": "1.*",
     "tourze/bundle-dependency": "1.*",
     "tourze/json-rpc-core": "0.0.*",
     "tourze/json-rpc-endpoint-bundle": "0.1.*",
