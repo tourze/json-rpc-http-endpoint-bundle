@@ -16,7 +16,7 @@
     "tourze/backtrace-helper": "1.*",
     "tourze/bundle-dependency": "1.*",
     "tourze/json-rpc-core": "1.0.*",
-    "tourze/json-rpc-endpoint-bundle": "0.1.*",
+    "tourze/json-rpc-endpoint-bundle": "1.0.*",
     "tourze/symfony-dependency-service-loader": "1.0.*",
     "tourze/symfony-routing-auto-loader-bundle": "1.0.*",
     "willdurand/jsonp-callback-validator": "^2.0"
