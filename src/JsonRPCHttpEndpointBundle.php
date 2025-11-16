@@ -2,6 +2,7 @@
 
 namespace Tourze\JsonRPCHttpEndpointBundle;
 
+use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Tourze\BacktraceHelper\Backtrace;
 use Tourze\BundleDependency\BundleDependencyInterface;
@@ -25,6 +26,7 @@ class JsonRPCHttpEndpointBundle extends Bundle implements BundleDependencyInterf
         return [
             JsonRPCEndpointBundle::class => ['all' => true],
             RoutingAutoLoaderBundle::class => ['all' => true],
+            TwigBundle::class => ['all' => true],
         ];
     }
 }
