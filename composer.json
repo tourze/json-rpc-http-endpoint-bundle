@@ -4,6 +4,7 @@
   "type": "symfony-bundle",
   "license": "MIT",
   "require": {
+    "symfony/asset": "^7.3",
     "symfony/config": "^7.3",
     "symfony/dependency-injection": "^7.3",
     "symfony/form": "^7.3",
