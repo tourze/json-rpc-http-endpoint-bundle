@@ -14,12 +14,6 @@ use Tourze\PHPUnitSymfonyUnitTest\AbstractDependencyInjectionExtensionTestCase;
 #[CoversClass(JsonRPCHttpEndpointExtension::class)]
 final class JsonRPCHttpEndpointExtensionTest extends AbstractDependencyInjectionExtensionTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        // 无需特殊设置
-    }
-
     public function testLoadLoadsServicesYaml(): void
     {
         // 创建一个真实的ContainerBuilder而不是模拟
