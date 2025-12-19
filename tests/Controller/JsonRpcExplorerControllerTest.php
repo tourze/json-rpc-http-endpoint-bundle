@@ -15,7 +15,7 @@ use Tourze\PHPUnitSymfonyWebTest\AbstractWebTestCase;
  */
 #[CoversClass(JsonRpcExplorerController::class)]
 #[RunTestsInSeparateProcesses]
-class JsonRpcExplorerControllerTest extends AbstractWebTestCase
+final class JsonRpcExplorerControllerTest extends AbstractWebTestCase
 {
     public function testExplorerPageLoads(): void
     {
